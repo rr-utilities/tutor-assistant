@@ -1,1 +1,179 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
+    <title>Nachhilfe Assistant v.1.0</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <link rel="icon" href="" type="image/jpg">
+    <link rel="apple-touch-icon" href="">
+    <meta name="apple-mobile-web-app-title" content="Tutor Assistant">
+</head>
+
+<body>
+    <h1>Tutor Assistant</h1>
+
+    <h2>Dashboard</h2>
+
+    <div class="sneak">
+        <h3>Nächster Termin</h3>
+        <p id="nextEvent">Keine Termine vorhanden.</p>
+
+        <h3>Offene Zahlungen</h3>
+        <p id="openPayments">Keine offenen Zahlungen.</p>
+    </div>
+
+    <h2>Schülerübersicht</h2>
+    <form id="addStudentForm">
+        <input type="text" id="studentNameInput" placeholder="Schülername">
+        <button type="submit">Hinzufügen</button>
+    </form>
+
+    <ul id="studentList"></ul>
+
+    <h2>Daten Transfer</h2>
+    <div>
+        <button id="exportDataBtn" class="button2">Daten exportieren</button>
+    </div>
+    <br>
+    <div>
+        <label for="importDataInput" style="font-size: 15px;">Daten importieren</label>
+        <input type="file" id="importDataInput" accept=".json" style="display: none;">
+    </div>
+</body>
+
+<script>
+    let students = JSON.parse(localStorage.getItem("students")) || [];
+
+    function saveStudents() {
+        localStorage.setItem("students", JSON.stringify(students));
+    }
+
+    function renderStudents() {
+        const list = document.getElementById("studentList");
+        list.innerHTML = "";
+        students.forEach((student, index) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="schueler.html?index=${index}">${student.name}</a>`;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Löschen";
+            deleteBtn.onclick = () => {
+                if (confirm(`Schüler "${student.name}" wirklich löschen? Alle Daten gehen verloren!`)) {
+                    students.splice(index, 1);
+                    saveStudents();
+                    renderStudents();
+                    renderDashboard();
+                }
+            };
+            li.appendChild(deleteBtn);
+            list.appendChild(li);
+        });
+    }
+
+    document.getElementById("addStudentForm").addEventListener("submit", e => {
+        e.preventDefault();
+        const name = document.getElementById("studentNameInput").value.trim();
+        if (!name) return;
+
+        if (students.some(s => s.name === name)) {
+            alert("Dieser Schüler existiert bereits!");
+            return;
+        }
+
+        students.push({ name, appointments: [], payments: [] });
+        saveStudents();
+        renderStudents();
+        renderDashboard();
+        document.getElementById("studentNameInput").value = "";
+    });
+
+    function renderDashboard() {
+        let allAppointments = [];
+        let allPayments = [];
+        students.forEach(s => {
+            s.appointments.forEach(a => {
+                if (typeof a === "string") {
+                    allAppointments.push({ student: s.name, title: a, date: "Unbekannt" });
+                } else {
+                    allAppointments.push({ student: s.name, title: a.title, date: a.date });
+                }
+            });
+            s.payments.forEach(p => {
+                allPayments.push({ student: s.name, ...p });
+            });
+        });
+
+        const next = allAppointments.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
+        document.getElementById("nextEvent").textContent = next ? `${next.title} (${next.student}) am ${next.date}` : "Keine Termine vorhanden.";
+
+        const open = allPayments.filter(p => !p.confirmed);
+        document.getElementById("openPayments").textContent = open.length ? open.map(p => `${p.description} (${p.student}) ${p.amount} Fr.`).join(", ") : "Keine offenen Zahlungen.";
+    }
+
+    renderStudents();
+    renderDashboard();
+
+
+    document.getElementById("exportDataBtn").addEventListener("click", () => {
+    const students = localStorage.getItem("students");
+    if (!students) {
+        alert("Keine Daten zum Exportieren vorhanden!");
+        return;
+    }
+
+    const blob = new Blob([students], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "nachhilfe_data.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("importDataInput").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const importedStudents = JSON.parse(event.target.result);
+
+                if (!Array.isArray(importedStudents)) throw new Error("Ungültige Datei");
+
+                importedStudents.forEach(imported => {
+                    const existing = students.find(s => s.name === imported.name);
+
+                    if (existing) {
+                        imported.appointments?.forEach(appt => {
+                            if (!existing.appointments.includes(appt)) existing.appointments.push(appt);
+                        });
+                        imported.payments?.forEach(pay => {
+                            if (!existing.payments.some(p => p.description === pay.description && p.amount === pay.amount)) {
+                                existing.payments.push(pay);
+                            }
+                        });
+                    } else {
+                        students.push(imported);
+                    }
+                });
+
+                saveStudents();
+                renderStudents();
+                alert("Import erfolgreich!");
+            } catch (err) {
+                alert("Fehler beim Import: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+    });
+</script>
+
+</html>
