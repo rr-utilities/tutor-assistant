@@ -50,7 +50,7 @@ h1 {
     border-radius: 8px;
     padding: 10px;
     margin-bottom: 10px;
-    display: block;
+    display: flex;
     box-sizing: border-box;
     justify-content: space-between;
     align-items: flex-start;
