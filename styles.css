@@ -270,7 +270,6 @@ form {
 
 
 .footer {
-    background-color: #EBDECF;
     text-align: center;
     font-size: 14px;
     color: #333;
@@ -289,9 +288,4 @@ form {
 
 .footer a:hover {
     text-decoration: none;
-}
-
-.container {
-    width: 100%;
-    padding: 0;
 }
