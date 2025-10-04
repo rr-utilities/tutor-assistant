@@ -45,6 +45,10 @@
         <input type="file" id="importDataInput" accept=".json" style="display: none;">
     </div>
 </body>
+<br><br><br>
+<footer class="footer">
+    <p>&copy; 2025 <a href="https://sites.google.com/view/r-ravinthrarasa/projekte/education-utilities" target="_blank" class="styled-link">Education Utilities</a>, alle <a href="https://sites.google.com/view/r-ravinthrarasa/impressum" target="_blank" class="styled-link">Rechte</a> vorbehalten.</p>
+</footer>
 
 <script>
     let students = JSON.parse(localStorage.getItem("students")) || [];
@@ -93,31 +97,53 @@
     });
 
     function renderDashboard() {
-        let allAppointments = [];
-        let allPayments = [];
-        students.forEach(s => {
-            s.appointments.forEach(a => {
-                if (typeof a === "string") {
-                    allAppointments.push({ student: s.name, title: a, date: "Unbekannt" });
-                } else {
-                    allAppointments.push({ student: s.name, title: a.title, date: a.date });
-                }
-            });
-            s.payments.forEach(p => {
-                allPayments.push({ student: s.name, ...p });
-            });
+    const students = JSON.parse(localStorage.getItem("students")) || [];
+    const now = new Date();
+
+    let allAppointments = [];
+    students.forEach(s => {
+        if (s.appointments) {
+        s.appointments.forEach(a => {
+            const date = new Date(a.date);
+            if (!isNaN(date) && date >= now) {
+            allAppointments.push({ ...a, student: s.name });
+            }
         });
+        }
+    });
 
-        const next = allAppointments.sort((a,b) => new Date(a.date) - new Date(b.date))[0];
-        document.getElementById("nextEvent").textContent = next ? `${next.title} (${next.student}) am ${next.date}` : "Keine Termine vorhanden.";
-
-        const open = allPayments.filter(p => !p.confirmed);
-        document.getElementById("openPayments").textContent = open.length ? open.map(p => `${p.description} (${p.student}) ${p.amount} Fr.`).join(", ") : "Keine offenen Zahlungen.";
+    allAppointments.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const nextEventEl = document.getElementById("nextEvent");
+    if (allAppointments.length > 0) {
+        const next = allAppointments[0];
+        nextEventEl.textContent = `${next.student} | ${next.title || next.description} am ${next.date}`;
+    } else {
+        nextEventEl.textContent = "Keine Termine vorhanden.";
     }
 
-    renderStudents();
-    renderDashboard();
+    let openPayments = [];
+    students.forEach(s => {
+        if (s.payments) {
+        s.payments.forEach(p => {
+            if (!p.confirmed) {
+            openPayments.push({ ...p, student: s.name });
+            }
+        });
+        }
+    });
 
+    const openPaymentsEl = document.getElementById("openPayments");
+    if (openPayments.length > 0) {
+        openPaymentsEl.textContent = openPayments
+        .map(p => `${p.student} | ${p.title || p.description} (${p.amount} Fr.)`)
+        .join(" | ");
+    } else {
+        openPaymentsEl.textContent = "Keine offenen Zahlungen.";
+    }
+    }
+
+    renderDashboard();
+    renderStudents();
 
     document.getElementById("exportDataBtn").addEventListener("click", () => {
     const students = localStorage.getItem("students");
