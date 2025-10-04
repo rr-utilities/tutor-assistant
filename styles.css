@@ -1,4 +1,5 @@
 html, body {
+    height: 100%;
     margin: 0;
     padding: 0;
 }
@@ -8,10 +9,13 @@ body {
     background: #f8f8f8;
     color: #333;
     padding: 2rem;
-    display: block;
-    box-sizing: border-box;
+    display: flex;
     flex-direction: column;
     min-height: 100vh;
+}
+
+main {
+    flex: 1;
 }
 
 h1, h2, h3, h4 {
@@ -51,9 +55,8 @@ h1 {
     padding: 10px;
     margin-bottom: 10px;
     display: flex;
-    box-sizing: border-box;
     justify-content: space-between;
-    align-items: flex-start;
+    align-items: center;
     box-shadow: 0 1px 3px rgba(0,0,0,0.08);
 }
 
@@ -114,8 +117,7 @@ h1 {
 }
 
 form {
-    display: block;
-    box-sizing: border-box;
+    display: flex;
     margin-bottom: 2rem;
 }
 
@@ -168,13 +170,9 @@ form button:hover {
     }
 }
 
-input, textarea, select {
-    -webkit-user-select: text;
-    user-select: text;
-    -webkit-touch-callout: none;
-    appearance: none;
-    -webkit-appearance: none;
-}
+
+
+
 
 
 
@@ -205,7 +203,7 @@ a:hover {
 }
 
 table {
-    width: 95%;
+    width: 100%;
     border-collapse: collapse;
     margin-bottom: 1rem;
 }
@@ -246,10 +244,9 @@ input, select {
 }
 
 form {
-    display: block;
-    box-sizing: border-box;
+    display: flex;
     flex-wrap: wrap;
-    align-items: flex-start;
+    align-items: center;
     margin-top: 0.5rem;
 }
 
@@ -283,7 +280,7 @@ form {
     color: #333;
     box-sizing: border-box;
     padding: 10px 0;
-    width: auto;
+    width: 100%;
     margin-top: 20px;
 
 }
