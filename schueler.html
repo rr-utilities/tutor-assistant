@@ -124,18 +124,29 @@
     }
 
 function addToCalendar(title, date) {
-  const formattedDate = date.replace(/-/g, '');
+  // Benutzer nach Start- und Endzeit fragen (z. B. 14:00–15:00)
+  const startTime = prompt("Startzeit (HH:MM, 24h-Format):", "14:00");
+  const endTime = prompt("Endzeit (HH:MM, 24h-Format):", "15:00");
+
+  if (!startTime || !endTime) return;
+
+  // Datum und Uhrzeit für ICS-Datei formatieren
+  const start = `${date}T${startTime.replace(":", "")}00Z`;
+  const end = `${date}T${endTime.replace(":", "")}00Z`;
+
+  // ICS-Event-Text
   const event = `BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
 SUMMARY:${title}
-DTSTART:${formattedDate}T120000Z
-DTEND:${formattedDate}T130000Z
+DTSTART:${start}
+DTEND:${end}
 END:VEVENT
 END:VCALENDAR`;
 
-  const data = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(event);
-  window.location.href = data; // öffnet direkt die Kalender-Option
+  // Direktlink öffnen (funktioniert auch auf iOS ohne Download)
+  const data = "data:text/calendar;charset=utf-8," + encodeURIComponent(event);
+  window.location.href = data;
 }
 
     function renderPayments() {
