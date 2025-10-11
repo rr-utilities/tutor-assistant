@@ -95,51 +95,52 @@
         document.getElementById("studentNameInput").value = "";
     });
 
-    function renderDashboard() {
+function renderDashboard() {
     const students = JSON.parse(localStorage.getItem("students")) || [];
     const now = new Date();
 
+    // --- Nächster Termin ---
     let allAppointments = [];
     students.forEach(s => {
         if (s.appointments) {
-        s.appointments.forEach(a => {
-            const date = new Date(a.date);
-            if (!isNaN(date) && date >= now) {
-            allAppointments.push({ ...a, student: s.name });
-            }
-        });
+            s.appointments.forEach(a => {
+                const date = new Date(a.date);
+                if (!isNaN(date) && date >= now) {
+                    allAppointments.push({ ...a, student: s.name });
+                }
+            });
         }
     });
 
     allAppointments.sort((a, b) => new Date(a.date) - new Date(b.date));
     const nextEventEl = document.getElementById("nextEvent");
     if (allAppointments.length > 0) {
-        const next = allAppointments[0];
+        const next = allAppointments[0]; // nur der erste
         nextEventEl.textContent = `${next.student} | ${next.title || next.description} am ${next.date}`;
     } else {
         nextEventEl.textContent = "Keine Termine vorhanden.";
     }
 
+    // --- Nächste offene Zahlung ---
     let openPayments = [];
     students.forEach(s => {
         if (s.payments) {
-        s.payments.forEach(p => {
-            if (!p.confirmed) {
-            openPayments.push({ ...p, student: s.name });
-            }
-        });
+            s.payments.forEach(p => {
+                if (!p.confirmed) {
+                    openPayments.push({ ...p, student: s.name });
+                }
+            });
         }
     });
 
     const openPaymentsEl = document.getElementById("openPayments");
     if (openPayments.length > 0) {
-        openPaymentsEl.textContent = openPayments
-        .map(p => `${p.student} | ${p.title || p.description} (${p.amount} Fr.)`)
-        .join(" | ");
+        const nextPayment = openPayments[0]; // nur die erste offene Zahlung
+        openPaymentsEl.textContent = `${nextPayment.student} | ${nextPayment.title || nextPayment.description} (${nextPayment.amount} Fr.)`;
     } else {
         openPaymentsEl.textContent = "Keine offenen Zahlungen.";
     }
-    }
+}
 
     renderDashboard();
     renderStudents();

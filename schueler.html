@@ -102,13 +102,11 @@
         tr.innerHTML = `<td>${appt.title}</td><td>${appt.date}</td>`;
         const td = document.createElement("td");
 
-        // --- 📅 In Kalender hinzufügen ---
         const calBtn = document.createElement("button");
         calBtn.textContent = "In Kalender";
         calBtn.onclick = () => addToCalendar(appt.title, appt.date);
         td.appendChild(calBtn);
 
-        // --- 🗑️ Löschen ---
         const del = document.createElement("button");
         del.textContent = "Löschen";
         del.style.marginLeft = "6px";
@@ -123,36 +121,36 @@
     });
     }
 
-function addToCalendar(apptTitle, apptDate) {
-  const time = prompt("Uhrzeit (z. B. 15:30):", "12:00");
-  if (!time) return;
-  const [hour, minute] = time.split(":");
-  
-  const start = new Date(`${apptDate}T${hour.padStart(2,'0')}:${minute.padStart(2,'0')}:00`);
-  const end = new Date(start.getTime() + 60 * 60 * 1000); // +1 Stunde
+    function addToCalendar(apptTitle, apptDate) {
+        const time = prompt("Uhrzeit (z.B. 15:30):", "12:00");
+        if (!time) return;
+        const [hour, minute] = time.split(":");
 
-  const fmt = d => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+        const start = new Date(`${apptDate}T${hour.padStart(2,'0')}:${minute.padStart(2,'0')}:00`);
+        const end = new Date(start.getTime() + 60 * 60 * 1000); // +1 Stunde
 
-  const event = `BEGIN:VCALENDAR
-VERSION:2.0
-BEGIN:VEVENT
-SUMMARY:${apptTitle}
-DTSTART:${fmt(start)}
-DTEND:${fmt(end)}
-END:VEVENT
-END:VCALENDAR`;
+        const fmt = d => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 
-  const blob = new Blob([event], { type: "text/calendar" });
-  const url = URL.createObjectURL(blob);
+        const event =
+        `BEGIN:VCALENDAR
+        VERSION:2.0
+        BEGIN:VEVENT
+        SUMMARY:${apptTitle}
+        DTSTART:${fmt(start)}
+        DTEND:${fmt(end)}
+        END:VEVENT
+        END:VCALENDAR`;
+        const blob = new Blob([event], { type: "text/calendar" });
+        const url = URL.createObjectURL(blob);
 
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = `${apptTitle}.ics`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${apptTitle}.ics`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    }
 
     function renderPayments() {
         const tbody = document.getElementById("paymentTable").querySelector("tbody");
