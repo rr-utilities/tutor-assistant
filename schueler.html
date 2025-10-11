@@ -83,6 +83,7 @@
             const tr = document.createElement("tr");
             tr.innerHTML = `<td>${appt.title}</td><td>${appt.date}</td>`;
             const td = document.createElement("td");
+
             const del = document.createElement("button");
             del.textContent = "Löschen";
             del.onclick = () => { student.appointments.splice(i,1); saveAndRender(); };
@@ -90,6 +91,59 @@
             tr.appendChild(td);
             tbody.appendChild(tr);
         });
+    }
+
+    function renderEvents() {
+    const tbody = document.getElementById("eventTable").querySelector("tbody");
+    tbody.innerHTML = "";
+
+    student.appointments.forEach((appt, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td>${appt.title}</td><td>${appt.date}</td>`;
+        const td = document.createElement("td");
+
+        // --- 📅 In Kalender hinzufügen ---
+        const calBtn = document.createElement("button");
+        calBtn.textContent = "📅 In Kalender";
+        calBtn.onclick = () => addToCalendar(appt.title, appt.date);
+        td.appendChild(calBtn);
+
+        // --- 🗑️ Löschen ---
+        const del = document.createElement("button");
+        del.textContent = "Löschen";
+        del.style.marginLeft = "6px";
+        del.onclick = () => {
+        student.appointments.splice(i, 1);
+        saveAndRender();
+        };
+        td.appendChild(del);
+
+        tr.appendChild(td);
+        tbody.appendChild(tr);
+    });
+    }
+
+    // --- Funktion zum Erstellen und Herunterladen eines Kalender-Events (.ics) ---
+    function addToCalendar(title, date) {
+    const formattedDate = date.replace(/-/g, '');
+    const event = `BEGIN:VCALENDAR
+    VERSION:2.0
+    BEGIN:VEVENT
+    SUMMARY:${title}
+    DTSTART:${formattedDate}T120000Z
+    DTEND:${formattedDate}T130000Z
+    END:VEVENT
+    END:VCALENDAR`;
+
+    const blob = new Blob([event], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.ics`;
+    a.click();
+
+    URL.revokeObjectURL(url);
     }
 
     function renderPayments() {
