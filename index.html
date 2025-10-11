@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <title>Tutor Assistant v.1.0</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <link rel="icon" href="Favicon/favicon.png" type="image/png">
+    <link rel="apple-touch-icon" href="Favicon/apple-icon.png">
+    <meta name="apple-mobile-web-app-title" content="Tutor Assistant">
+</head>
+
+<body>
+    <h1>Tutor Assistant</h1>
+    
+    <h2>Dashboard</h2>
+
+    <div class="sneak">
+        <h3>Nächster Termin</h3>
+        <p id="nextEvent">Keine Termine vorhanden.</p>
+
+        <h3>Offene Zahlungen</h3>
+        <p id="openPayments">Keine offenen Zahlungen.</p>
+    </div>
+
+    <h2>Schülerübersicht</h2>
+    <form id="addStudentForm">
+        <input type="text" id="studentNameInput" placeholder="Schülername">
+        <button type="submit">Hinzufügen</button>
+    </form>
+
+    <ul id="studentList"></ul>
+
+    <h2>Daten Transfer</h2>
+    <div>
+        <button id="exportDataBtn" class="button2">Daten exportieren</button>
+    </div>
+    <br>
+    <div>
+        <label for="importDataInput" style="font-size: 15px;">Daten importieren</label>
+        <input type="file" id="importDataInput" accept=".json" style="display: none;">
+    </div>
+</body>
+<footer class="footer">
+    <p>&copy; 2025 <a href="https://sites.google.com/view/r-ravinthrarasa/projekte/education-utilities" target="_blank" class="styled-link">Education Utilities</a>, alle <a href="https://sites.google.com/view/r-ravinthrarasa/impressum" target="_blank" class="styled-link">Rechte</a> vorbehalten.</p>
+</footer>
+
+<script>
+    let students = JSON.parse(localStorage.getItem("students")) || [];
+
+    function saveStudents() {
+        localStorage.setItem("students", JSON.stringify(students));
+    }
+
+    function renderStudents() {
+        const list = document.getElementById("studentList");
+        list.innerHTML = "";
+        students.forEach((student, index) => {
+            const li = document.createElement("li");
+            li.innerHTML = `<a href="schueler.html?index=${index}">${student.name}</a>`;
+
+            const deleteBtn = document.createElement("button");
+            deleteBtn.textContent = "Löschen";
+            deleteBtn.onclick = () => {
+                if (confirm(`Schüler "${student.name}" wirklich löschen? Alle Daten gehen verloren!`)) {
+                    students.splice(index, 1);
+                    saveStudents();
+                    renderStudents();
+                    renderDashboard();
+                }
+            };
+            li.appendChild(deleteBtn);
+            list.appendChild(li);
+        });
+    }
+
+    document.getElementById("addStudentForm").addEventListener("submit", e => {
+        e.preventDefault();
+        const name = document.getElementById("studentNameInput").value.trim();
+        if (!name) return;
+
+        if (students.some(s => s.name === name)) {
+            alert("Dieser Schüler existiert bereits!");
+            return;
+        }
+
+        students.push({ name, appointments: [], payments: [] });
+        saveStudents();
+        renderStudents();
+        renderDashboard();
+        document.getElementById("studentNameInput").value = "";
+    });
+
+    function renderDashboard() {
+    const students = JSON.parse(localStorage.getItem("students")) || [];
+    const now = new Date();
+
+    let allAppointments = [];
+    students.forEach(s => {
+        if (s.appointments) {
+        s.appointments.forEach(a => {
+            const date = new Date(a.date);
+            if (!isNaN(date) && date >= now) {
+            allAppointments.push({ ...a, student: s.name });
+            }
+        });
+        }
+    });
+
+    allAppointments.sort((a, b) => new Date(a.date) - new Date(b.date));
+    const nextEventEl = document.getElementById("nextEvent");
+    if (allAppointments.length > 0) {
+        const next = allAppointments[0];
+        nextEventEl.textContent = `${next.student} | ${next.title || next.description} am ${next.date}`;
+    } else {
+        nextEventEl.textContent = "Keine Termine vorhanden.";
+    }
+
+    let openPayments = [];
+    students.forEach(s => {
+        if (s.payments) {
+        s.payments.forEach(p => {
+            if (!p.confirmed) {
+            openPayments.push({ ...p, student: s.name });
+            }
+        });
+        }
+    });
+
+    const openPaymentsEl = document.getElementById("openPayments");
+    if (openPayments.length > 0) {
+        openPaymentsEl.textContent = openPayments
+        .map(p => `${p.student} | ${p.title || p.description} (${p.amount} Fr.)`)
+        .join(" | ");
+    } else {
+        openPaymentsEl.textContent = "Keine offenen Zahlungen.";
+    }
+    }
+
+    renderDashboard();
+    renderStudents();
+
+    document.getElementById("exportDataBtn").addEventListener("click", () => {
+    const students = localStorage.getItem("students");
+    if (!students) {
+        alert("Keine Daten zum Exportieren vorhanden!");
+        return;
+    }
+
+    const blob = new Blob([students], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "nachhilfe_data.json";
+    a.click();
+
+    URL.revokeObjectURL(url);
+    });
+
+    document.getElementById("importDataInput").addEventListener("change", function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            try {
+                const importedStudents = JSON.parse(event.target.result);
+
+                if (!Array.isArray(importedStudents)) throw new Error("Ungültige Datei");
+
+                importedStudents.forEach(imported => {
+                    const existing = students.find(s => s.name === imported.name);
+
+                    if (existing) {
+                        imported.appointments?.forEach(appt => {
+                            if (!existing.appointments.includes(appt)) existing.appointments.push(appt);
+                        });
+                        imported.payments?.forEach(pay => {
+                            if (!existing.payments.some(p => p.description === pay.description && p.amount === pay.amount)) {
+                                existing.payments.push(pay);
+                            }
+                        });
+                    } else {
+                        students.push(imported);
+                    }
+                });
+
+                saveStudents();
+                renderStudents();
+                alert("Import erfolgreich!");
+            } catch (err) {
+                alert("Fehler beim Import: " + err.message);
+            }
+        };
+        reader.readAsText(file);
+    });
+</script>
+
+</html>
