@@ -43,6 +43,11 @@ document.getElementById("addStudentForm").addEventListener("submit", e => {
     document.getElementById("studentNameInput").value = "";
 });
 
+function formatDate(yyyy_mm_dd) {
+    const [y, m, d] = yyyy_mm_dd.split("-");
+    return `${d}.${m}.${y}`;
+}
+
 function renderDashboard() {
     const students = JSON.parse(localStorage.getItem("students")) || [];
     const now = new Date();
@@ -63,7 +68,7 @@ function renderDashboard() {
     const nextEventEl = document.getElementById("nextEvent");
     if (allAppointments.length > 0) {
         const next = allAppointments[0];
-        nextEventEl.textContent = `${next.student} | ${next.title || next.description} am ${next.date}`;
+        nextEventEl.textContent = `${next.student} | ${next.title || next.description} am ${formatDate(next.date)}`;
     } else {
         nextEventEl.textContent = "Keine Termine vorhanden.";
     }
