@@ -123,30 +123,35 @@
     });
     }
 
-function addToCalendar(title, date) {
-  // Benutzer nach Start- und Endzeit fragen (z. B. 14:00–15:00)
-  const startTime = prompt("Startzeit (HH:MM, 24h-Format):", "14:00");
-  const endTime = prompt("Endzeit (HH:MM, 24h-Format):", "15:00");
+function addToCalendar(apptTitle, apptDate) {
+  const time = prompt("Uhrzeit (z. B. 15:30):", "12:00");
+  if (!time) return;
+  const [hour, minute] = time.split(":");
+  
+  const start = new Date(`${apptDate}T${hour.padStart(2,'0')}:${minute.padStart(2,'0')}:00`);
+  const end = new Date(start.getTime() + 60 * 60 * 1000); // +1 Stunde
 
-  if (!startTime || !endTime) return;
+  const fmt = d => d.toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
 
-  // Datum und Uhrzeit für ICS-Datei formatieren
-  const start = `${date}T${startTime.replace(":", "")}00Z`;
-  const end = `${date}T${endTime.replace(":", "")}00Z`;
-
-  // ICS-Event-Text
   const event = `BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
-SUMMARY:${title}
-DTSTART:${start}
-DTEND:${end}
+SUMMARY:${apptTitle}
+DTSTART:${fmt(start)}
+DTEND:${fmt(end)}
 END:VEVENT
 END:VCALENDAR`;
 
-  // Direktlink öffnen (funktioniert auch auf iOS ohne Download)
-  const data = "data:text/calendar;charset=utf-8," + encodeURIComponent(event);
-  window.location.href = data;
+  const blob = new Blob([event], { type: "text/calendar" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${apptTitle}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
     function renderPayments() {
