@@ -104,7 +104,7 @@
 
         // --- 📅 In Kalender hinzufügen ---
         const calBtn = document.createElement("button");
-        calBtn.textContent = "📅 In Kalender";
+        calBtn.textContent = "In Kalender";
         calBtn.onclick = () => addToCalendar(appt.title, appt.date);
         td.appendChild(calBtn);
 
@@ -123,28 +123,20 @@
     });
     }
 
-    // --- Funktion zum Erstellen und Herunterladen eines Kalender-Events (.ics) ---
-    function addToCalendar(title, date) {
-    const formattedDate = date.replace(/-/g, '');
-    const event = `BEGIN:VCALENDAR
-    VERSION:2.0
-    BEGIN:VEVENT
-    SUMMARY:${title}
-    DTSTART:${formattedDate}T120000Z
-    DTEND:${formattedDate}T130000Z
-    END:VEVENT
-    END:VCALENDAR`;
+function addToCalendar(title, date) {
+  const formattedDate = date.replace(/-/g, '');
+  const event = `BEGIN:VCALENDAR
+VERSION:2.0
+BEGIN:VEVENT
+SUMMARY:${title}
+DTSTART:${formattedDate}T120000Z
+DTEND:${formattedDate}T130000Z
+END:VEVENT
+END:VCALENDAR`;
 
-    const blob = new Blob([event], { type: 'text/calendar' });
-    const url = URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${title}.ics`;
-    a.click();
-
-    URL.revokeObjectURL(url);
-    }
+  const data = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(event);
+  window.location.href = data; // öffnet direkt die Kalender-Option
+}
 
     function renderPayments() {
         const tbody = document.getElementById("paymentTable").querySelector("tbody");
